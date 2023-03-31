@@ -5,6 +5,7 @@ In this example diopter is used to generate and reduce a csmith
 that results in larger text with -Os than -O3
 """
 
+import subprocess
 from diopter.compiler import (
     CompilationSetting,
     CompilerExe,
@@ -15,6 +16,29 @@ from diopter.compiler import (
 from diopter.generator import CSmithGenerator
 from diopter.reducer import Reducer, ReductionCallback
 from diopter.sanitizer import Sanitizer
+from diopter.compiler import Language
+
+import sys
+from subprocess import call
+
+
+# This is used to devalue the trivial solution
+def get_empty_assembly_size(setting: CompilationSetting) -> int:
+    empty = "int main(){}"
+    program = SourceProgram(
+            code=empty,
+            language=Language.C,
+            defined_macros=(),
+            include_paths=(),
+            system_include_paths=("/home/chris/.bin/csmith/build/include"),
+            flags=(),
+        )
+
+    bianryLength = setting.compile_program(
+        program, 
+        ObjectCompilationOutput(None)).output.text_size()
+
+    return bianryLength
 
 
 
@@ -29,21 +53,23 @@ def get_ratio(program: SourceProgram, setting: CompilationSetting) -> float:
         program, ObjectCompilationOutput(None)
         ).output.text_size()
     
-    ratio = binaryLength/codeLength
+    #TODO fixed ratio -> binaryLength-(default initializer for stack). Devalues `int main(){}` outputs
+    ratio = (binaryLength-get_empty_assembly_size(setting))/codeLength
 
     return ratio
 
 
 def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
     ratio = get_ratio(program,Osettings)
-    return ratio>best_ratio
+    #1. clang-format code
+    lc = ["echo",program.code,"|", "clang-format",
+          '--style="{ BasedOnStyle: Google, KeepEmptyLinesAtTheStartOfBlocks: false, KeepEmptyLinesAtTheEndOfBlocks: false }"']
 
-def filter(
-    program: SourceProgram, O3: CompilationSetting, Os: CompilationSetting
-) -> bool:
-    O3_size = get_size(program, O3)
-    Os_size = get_size(program, Os)
-    return O3_size < Os_size
+    child = subprocess.Popen(lc, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = child.stdout.read()
+    output = [s for s in output.splitlines() if not s.isspace()]    # Remove lines containing only spaces
+    
+    return ratio>best_ratio and len(output) > 15
 
 
 class ReduceObjectSize(ReductionCallback):
@@ -83,12 +109,13 @@ if __name__ == "__main__":
     while True:
         p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include").generate_program()
         #p = Os.preprocess_program(p, make_compiler_agnostic=False)
-        if filter(p, O3, Os):
+
+        #print(ratio_filter(p,O3,0))
+        if ratio_filter(p, O3, 0):
             break
     print(f"initial ratio: {get_ratio(p, O3)}")
     #print(p.code)    
     rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, O3, Os))  # , debug=True)
     assert rprogram
 
-    print(rprogram.code)
     print(f"Ratio obtained: {get_ratio(rprogram, O3)}")
