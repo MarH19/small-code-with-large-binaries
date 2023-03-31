@@ -34,6 +34,9 @@ def get_ratio(program: SourceProgram, setting: CompilationSetting) -> float:
     return ratio
 
 
+def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
+    ratio = get_ratio(program,Osettings)
+    return ratio>best_ratio
 
 def filter(
     program: SourceProgram, O3: CompilationSetting, Os: CompilationSetting
@@ -53,12 +56,17 @@ class ReduceObjectSize(ReductionCallback):
         self.san = san
         self.O3 = O3
         self.Os = Os
-        self.bestRatio = ...
+        self.bestRatio = 0
 
     def test(self, program: SourceProgram) -> bool:
         if not self.san.sanitize(program):
             return False
-        return filter(program, self.O3, self.Os)
+        
+        # Check if the ratio has increased!
+        if ratio_filter(program, self.O3, self.bestRatio):
+            self.bestRatio = get_ratio(program, self.O3)
+            return True
+        return False
 
 if __name__ == "__main__":
     O3 = CompilationSetting(
@@ -74,16 +82,13 @@ if __name__ == "__main__":
     sanitizer = Sanitizer()
     while True:
         p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include").generate_program()
-        print("before "+str(sanitizer.sanitize(p)))
-        p = Os.preprocess_program(p, make_compiler_agnostic=False)
-        print("after "+str(sanitizer.sanitize(p)))
+        #p = Os.preprocess_program(p, make_compiler_agnostic=False)
         if filter(p, O3, Os):
             break
-    print(f"O3 size: {get_size(p, O3)}")
-    print(f"Os size: {get_size(p, Os)}")
-
+    print(f"initial ratio: {get_ratio(p, O3)}")
     #print(p.code)    
     rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, O3, Os))  # , debug=True)
     assert rprogram
-    print(f"O3 size: {get_size(rprogram, O3)}")
-    print(f"Os size: {get_size(rprogram, Os)}")
+
+    print(rprogram.code)
+    print(f"Ratio obtained: {get_ratio(rprogram, O3)}")
