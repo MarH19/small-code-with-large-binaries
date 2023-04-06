@@ -62,6 +62,8 @@ def get_ratio(program: SourceProgram, setting: CompilationSetting) -> float:
     return ratio
 
 
+# clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
+
 def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
     ratio = get_ratio(program,Osettings)
 
@@ -69,10 +71,6 @@ def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_rat
     code = helper.comment_remover(program.code)
 
     #1. clang-format code
-    # lc = ["echo",code,"| clang-format"]
-    # #      ,'--style="{ BasedOnStyle: Google, KeepEmptyLinesAtTheStartOfBlocks: false, KeepEmptyLinesAtTheEndOfBlocks: false }"']
-    # child = subprocess.Popen(lc, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    # output = child.stdout.read()
     proc = subprocess.Popen(
         ["clang-format"],
         stdin=subprocess.PIPE,
@@ -87,7 +85,6 @@ def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_rat
     with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
         f.write(code)
 
-        #cmd_str = "ctags -x "+f.name+" | awk '{print $2}' | sort | uniq | wc -l"
         cmd_str = "ctags -x "+f.name+" | awk '{print $2}' | sort | wc -l"
         
         out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
@@ -153,9 +150,7 @@ if __name__ == "__main__":
                 break
         print(f"initial ratio: {get_ratio(p, O3)}")
         t = ReduceObjectSize(sanitizer, O3, Os)
-        print(t.test(p))
-        import pdb; pdb.set_trace()
-        #print(p.code)    
+        # import pdb; pdb.set_trace()
         rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, O3, Os))  # , debug=True)
         assert rprogram
         with open("output_"+str(i)+".c", "a") as f:
