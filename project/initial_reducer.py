@@ -116,7 +116,8 @@ class ReduceObjectSize(ReductionCallback):
         self.bestRatio = 0
 
     def test(self, program: SourceProgram) -> bool:
-        if not self.san.sanitize(program):
+        if not (res := self.san.sanitize(program)):
+            print(f" {res} Sani fail")
             return False
         
         # Check if the ratio has increased!
@@ -137,15 +138,23 @@ if __name__ == "__main__":
             opt_level=OptLevel.Os,
             flags=("-march=native",),
         )
-        sanitizer = Sanitizer()
+        sanOs = CompilationSetting(
+            compiler=CompilerExe.get_system_clang(),
+            opt_level=OptLevel.Os,
+            flags=("-march=native",),
+        )
+        sanitizer = Sanitizer(debug=True)
         while True:
             p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include").generate_program()
-            #p = Os.preprocess_program(p, make_compiler_agnostic=False)
-
+            p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
+            sanitizer.sanitize(p)
             #print(ratio_filter(p,O3,0))
             if ratio_filter(p, O3, 0):
                 break
         print(f"initial ratio: {get_ratio(p, O3)}")
+        t = ReduceObjectSize(sanitizer, O3, Os)
+        print(t.test(p))
+        import pdb; pdb.set_trace()
         #print(p.code)    
         rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, O3, Os))  # , debug=True)
         assert rprogram
