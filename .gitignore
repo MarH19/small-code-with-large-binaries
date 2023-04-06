@@ -1,0 +1,5 @@
+VIRTUAL
+project/__pycache__
+*platform.info
+
+*output*.c

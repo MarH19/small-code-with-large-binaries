@@ -1,7 +1,7 @@
 FROM ubuntu
 
 RUN apt-get -y update
-RUN apt-get -y install build-essential cmake clang vim git python3 python3-pip python-is-python3 creduce csmith g++ m4
+RUN apt-get -y install build-essential cmake clang vim git python3 python3-pip python-is-python3 creduce csmith g++ m4 ctags clang-format
 
 
 RUN pip install diopter
