@@ -1,5 +1,7 @@
 # Utilities to help parse Abstract syntax trees
 
+import subprocess
+import tempfile
 from anytree import Node, RenderTree
 
 
@@ -87,20 +89,18 @@ def parse_tree(parent: Node, previous_depth:int):
     currentDepth = len(splitInnput[0])
     currentNode = Node(splitInnput[1],parent=parent)
     remaining_input = remaining_input[1:]
-    observed_node = currentNode
-
+    
     while len(remaining_input)>0:
         splitInnput = remaining_input[0].split("-")
         node_depth = len(splitInnput[0])
         if node_depth == currentDepth:
             parse_tree(parent,currentDepth)
-        elif node_depth == currentDepth+1:
-            observed_node = Node(splitInnput[1],parent=currentNode)
-            remaining_input = remaining_input[1:]
-        elif node_depth > currentDepth+1:
-            parse_tree(observed_node,currentDepth)
+            return
+        elif node_depth > currentDepth:
+            parse_tree(currentNode,currentDepth)
         else:
             return
+        remaining_input = remaining_input[1:]
         
 
 
@@ -121,6 +121,7 @@ def extract_ast_from_output(input):
 
     remaining_input = input
     root = Node("root")
+    print("----------------")
     parse_tree(root,0)
 
     for node in root.descendants:
@@ -136,16 +137,21 @@ def extract_ast_from_output(input):
     return root
 
 def get_ast_size(input:str) -> int:
+    print(input)
     root = extract_ast_from_output(input)
     print(f"Size of program: {len(root.descendants)}")
     return len(root.descendants)
 
 
-def get_code_size(input: str) -> int:
-    # 1. call clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
-    # 2. pass arguments to get_ast_size
-    # 3. return
-    ...
+def get_code_size(code: str) -> int:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
+        f.write(code)
 
-extract_ast_from_output(test_output)
+    # 1. call clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
+        cmd_str = "clang -Xclang -ast-dump -fsyntax-only "+f.name
+        out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
+    # 2. pass arguments to get_ast_size
+        return get_ast_size(out.stdout.decode("utf-8"))
+
+#extract_ast_from_output(test_output)
 

@@ -7,6 +7,7 @@ that results in a disproportionate ratio between binary and source code
 
 import tempfile
 import helper
+import ast_parser
 import subprocess
 from diopter.compiler import (
     CompilationSetting,
@@ -80,7 +81,9 @@ def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_rat
     )
     stdout, stderr = proc.communicate(input=code)
     output = stdout
-
+    print("---")
+    print(ast_parser.get_code_size(code))
+    print("---")
     #OPTION 1, try to use a tool to count the logical lines of code/tokens in c code TODO find such a tools
     with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
         f.write(code)
