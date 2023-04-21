@@ -72,35 +72,36 @@ def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_rat
     code = helper.comment_remover(program.code)
 
     #1. clang-format code
-    proc = subprocess.Popen(
-        ["clang-format"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = proc.communicate(input=code)
-    output = stdout
+    # proc = subprocess.Popen(
+    #     ["clang-format"],
+    #     stdin=subprocess.PIPE,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.PIPE,
+    #     universal_newlines=True,
+    # )
+    # stdout, stderr = proc.communicate(input=code)
+    # output = stdout
     print("---")
-    print(ast_parser.get_code_size(code))
+    ast_code_size = ast_parser.get_code_size(code)
+    print(ast_code_size)
     print("---")
     #OPTION 1, try to use a tool to count the logical lines of code/tokens in c code TODO find such a tools
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
-        f.write(code)
+    # with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
+    #     f.write(code)
 
-        cmd_str = "ctags -x "+f.name+" | awk '{print $2}' | sort | wc -l"
+    #     cmd_str = "ctags -x "+f.name+" | awk '{print $2}' | sort | wc -l"
         
-        out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
+    #     out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
         
-        print(int(bytes.decode(out.stdout))>10) #ensure that there are more than 10 variable definitions/functions
+    #     print(int(bytes.decode(out.stdout))>10) #ensure that there are more than 10 variable definitions/functions
         
 
     # OPTION 2, try to remove tricks by hand
     #2. Remove "padding lines" which only contain ; { } ( )
-    output = [s for s in output.splitlines() if not (s.replace(";","")).isspace()] # Remove lines containing only spaces or only ;
+    # output = [s for s in output.splitlines() if not (s.replace(";","")).isspace()] # Remove lines containing only spaces or only ;
 
 
-    return ratio>best_ratio and int(bytes.decode(out.stdout))>10 #and len(output) > 15
+    return ratio>best_ratio and ast_code_size >30 #int(bytes.decode(out.stdout))>10 #and len(output) > 15
 
 
 class ReduceObjectSize(ReductionCallback):
@@ -127,7 +128,7 @@ class ReduceObjectSize(ReductionCallback):
         return False
 
 if __name__ == "__main__":
-    for i in range(5):
+    for i in range(1):  #TODO define a better way to run multiple intresting
         O3 = CompilationSetting(
             compiler=CompilerExe.get_system_gcc(),
             opt_level=OptLevel.O3,
@@ -155,6 +156,8 @@ if __name__ == "__main__":
         # import pdb; pdb.set_trace()
         rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, O3, Os))  # , debug=True)
         assert rprogram
+
+        #TODO ensure that output is clang-formatted for better readability
         with open("output_"+str(i)+".c", "a") as f:
             print(rprogram.code, file = f)
         print(f"Ratio obtained: {get_ratio(rprogram, O3)}")
