@@ -8,7 +8,7 @@ that results in a disproportionate ratio between binary and source code
 import tempfile
 import helper
 import ast_parser
-import subprocess
+
 from diopter.compiler import (
     CompilationSetting,
     CompilerExe,
@@ -71,17 +71,6 @@ def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_rat
     #0. remove comments from code
     code = helper.comment_remover(program.code)
 
-    #1. clang-format code
-    # proc = subprocess.Popen(
-    #     ["clang-format"],
-    #     stdin=subprocess.PIPE,
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.PIPE,
-    #     universal_newlines=True,
-    # )
-    # stdout, stderr = proc.communicate(input=code)
-    # output = stdout
-
     print("---")
     ast_code_size = ast_parser.get_code_size(code)
     print(ast_code_size)
@@ -136,7 +125,8 @@ if __name__ == "__main__":
         rprogram = Reducer().reduce(p, ReduceObjectSize(sanitizer, Os))  # , debug=True)
         assert rprogram
 
-        #TODO ensure that output is clang-formatted for better readability
+        output_code = helper.clang_formatter(rprogram.code)
+
         with open("output_"+str(i)+".c", "a") as f:
-            print(rprogram.code, file = f)
+            print(output_code, file = f)
         print(f"Ratio obtained: {get_ratio(rprogram, Os)}")
