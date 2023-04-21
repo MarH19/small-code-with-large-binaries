@@ -112,7 +112,7 @@ if __name__ == "__main__":
             opt_level=OptLevel.Os,
             flags=("-march=native",),
         )
-        sanitizer = Sanitizer(debug=True)
+        sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os)
         while True:
             p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include").generate_program()
             p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
