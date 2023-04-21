@@ -8,9 +8,9 @@ from diopter.compiler import (
     OptLevel
 )
 
-O3 = CompilationSetting(
+Os = CompilationSetting(
     compiler=CompilerExe.get_system_gcc(),
-    opt_level=OptLevel.O3,
+    opt_level=OptLevel.Os,
     flags=("-march=native",),
 )
 
@@ -37,7 +37,7 @@ with open(args.filename, "r") as f:
             flags=(),
     )    
 
-    bianryLength = O3.compile_program(
+    bianryLength = Os.compile_program(
         program, 
         ObjectCompilationOutput(None),
         additional_flags=["-I" "/home/chris/.bin/csmith/build/include/"]).output.text_size()
