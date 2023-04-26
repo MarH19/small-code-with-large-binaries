@@ -112,11 +112,14 @@ if __name__ == "__main__":
             opt_level=OptLevel.Os,
             flags=("-march=native",),
         )
-        sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os)
+        #Wunused-variable
+        expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
+        expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
+        sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
         while True:
             p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include").generate_program()
             p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
-            sanitizer.sanitize(p)
+            expanded_sanitizer.sanitize(p)
             if ratio_filter(p, Os, 0):
                 break
         print(f"initial ratio: {get_ratio(p, Os)}")
