@@ -9,6 +9,8 @@ import tempfile
 import helper
 import ast_parser
 import reduction_functions
+import saver
+import logging
 
 from diopter.compiler import (
     CompilationSetting,
@@ -33,45 +35,45 @@ def get_size(program: SourceProgram, setting: CompilationSetting) -> int:
         program, ObjectCompilationOutput(None)
     ).output.text_size()
 
-
-
-
-# clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
-
-
-
-
 if __name__ == "__main__":
-    for i in range(1):  #TODO define a better way to run multiple intresting
-        Os = CompilationSetting(
-            compiler=CompilerExe.get_system_gcc(),
-            opt_level=OptLevel.Os,
-            flags=("-march=native",),
-        )
-        sanOs = CompilationSetting(
-            compiler=CompilerExe.get_system_clang(),
-            opt_level=OptLevel.Os,
-            flags=("-march=native",),
-        )
-        #Wunused-variable
-        expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
-        expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
-        sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
-        while True:
-            options_pool = helper.generate_csmith_flags()
-            p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include",options_pool=options_pool).generate_program()
-            p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
-            expanded_sanitizer.sanitize(p)
-            if reduction_functions.ratio_filter(p, Os, 0): # and (res := expanded_sanitizer.sanitize(p)):
-                break
-        print(f"initial ratio: {helper.get_ratio(p, Os)}")
-        #t = ReduceObjectSize(sanitizer, Os)
-        # import pdb; pdb.set_trace()
-        rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os))  # , debug=True)
+    Os = CompilationSetting(
+        compiler=CompilerExe.get_system_gcc(),
+        opt_level=OptLevel.Os,
+        flags=("-march=native",),
+    )
+    sanOs = CompilationSetting(
+        compiler=CompilerExe.get_system_clang(),
+        opt_level=OptLevel.Os,
+        flags=("-march=native",),
+    )
+    #Wunused-variable
+    expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
+    expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
+    sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
+    while True:
+        options_pool = helper.generate_csmith_flags()
+        p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include",options_pool=options_pool).generate_program()
+        p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
+        expanded_sanitizer.sanitize(p)
+        if reduction_functions.ratio_filter(p, Os, 0): # and (res := expanded_sanitizer.sanitize(p)):
+            break
+    print(f"initial ratio: {helper.get_ratio(p, Os)}")
+    # import pdb; pdb.set_trace()
+    reduced_code_samples = []
+    reduced_code_sizes = []
+    test_names = []
+
+    for test_id in reduction_functions.get_test_functions():
+        print(f"Starting reduction with {test_id}")
+        rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))  # , debug=True)
         assert rprogram
 
         output_code = helper.clang_formatter(rprogram.code)
+        reduced_code_samples.append(output_code)
+        test_names.append(test_id) #FIXME get the function name to be appended!!!!!
 
-        with open("output_"+str(i)+".c", "a") as f:
-            print(output_code, file = f)
-        print(f"Ratio obtained: {helper.get_ratio(rprogram, Os)}")
+        ratio = helper.get_ratio(rprogram, Os)
+        print(f"Ratio obtained: {ratio}")
+        reduced_code_sizes.append(ratio)
+
+    saver.save_output(p.code, ''.join(options_pool), reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)
