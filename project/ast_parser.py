@@ -16,8 +16,6 @@ def parse_tree(parent: Node, previous_depth:int):
     currentNode = Node(splitInnput[1],parent=parent)
     remaining_input = remaining_input[1:]
 
-    #print(splitInnput[1])
-
     while len(remaining_input)!=0:
         next_depth = len(remaining_input[0].split("-")[0])
         if next_depth < currentDepth:
@@ -48,6 +46,8 @@ def extract_ast_from_output(input):
             node.parent = None
         if "VarDecl" in node.name:
             node.parent = None
+
+        #if "main" not in ancestors? not in name? remove all descendants
         #TODO ensure main is not empty!
 
     for pre, fill, node in RenderTree(root):
