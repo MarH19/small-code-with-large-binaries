@@ -4,11 +4,7 @@ import subprocess
 import tempfile
 from anytree import Node, RenderTree
 
-def count_ast_nodes():
-    ...
-
-
-def parse_tree(parent: Node, previous_depth:int):
+def __parse_tree__(parent: Node, previous_depth:int):
     global remaining_input
 
     splitInnput = remaining_input[0].split("-")
@@ -25,53 +21,91 @@ def parse_tree(parent: Node, previous_depth:int):
             currentNode = Node(remaining_input[0].split("-")[1], parent=parent)
             remaining_input = remaining_input[1:]
         if next_depth > currentDepth:
-            parse_tree(currentNode, 0)
+            __parse_tree__(currentNode, 0)
 
-def extract_ast_from_output(input):
-    global remaining_input
-    input = input.split("TranslationUnitDecl")
-    input = input[1].splitlines()
-    input = input[1:-1]
+# def extract_ast_from_output(input):
+#     global remaining_input
+#     input = input.split("TranslationUnitDecl")
+#     input = input[1].splitlines()
+#     input = input[1:-1]
     
 
-    remaining_input = input
-    root = Node("root")
-    print("----------------")
-    parse_tree(root,0)
+#     remaining_input = input
+#     root = Node("root")
+#     print("----------------")
+#     __parse_tree__(root,0)
 
-    for node in root.descendants:
-        if "TypedefDecl" in node.name:
-            node.parent = None
-        if "NullStmt" in node.name:
-            node.parent = None
-        if "VarDecl" in node.name:
-            node.parent = None
+#     for node in root.descendants:
+#         if "TypedefDecl" in node.name:
+#             node.parent = None
+#         if "NullStmt" in node.name:
+#             node.parent = None
+#         if "VarDecl" in node.name:
+#             node.parent = None
 
-        #if "main" not in ancestors? not in name? remove all descendants
-        #TODO ensure main is not empty!
+#         #if "main" not in ancestors? not in name? remove all descendants
+#         #TODO ensure main is not empty!
 
-    for pre, fill, node in RenderTree(root):
-        print("%s%s" % (pre,node.name))
-    print(root)
+#     for pre, fill, node in RenderTree(root):
+#         print("%s%s" % (pre,node.name))
+#     print(root)
 
-    return root
+#     return root
 
-def get_ast_size(input:str) -> int:
-    print(input)
-    root = extract_ast_from_output(input)
-    print(f"Size of program: {len(root.descendants)}")
-    return len(root.descendants)
+# def get_ast_size(input:str) -> int:
+#     print(input)
+#     root = extract_ast_from_output(input)
+#     print(f"Size of program: {len(root.descendants)}")
+#     return len(root.descendants)
 
 
-def get_code_size(code: str) -> int:
+# def get_code_size(code: str) -> int:
+#     with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
+#         f.write(code)
+
+#     # 1. call clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
+#         cmd_str = "clang -Xclang -ast-dump -fsyntax-only "+f.name
+#         out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
+#     # 2. pass arguments to get_ast_size
+#         return get_ast_size(out.stdout.decode("utf-8"))
+
+
+def get_ast_tree(code: str)-> Node:
+    global remaining_input
     with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=True) as f:
         f.write(code)
 
     # 1. call clang -Xclang -ast-dump -fsyntax-only outputs/with_synatx/output_5.c
         cmd_str = "clang -Xclang -ast-dump -fsyntax-only "+f.name
         out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
-    # 2. pass arguments to get_ast_size
-        return get_ast_size(out.stdout.decode("utf-8"))
+        ast_dump = out.stdout.decode("utf-8")
+
+    # 2. Remove warnings from output (all lines above TranslationUnitDecl)
+        input = ast_dump.split("TranslationUnitDecl")
+        input = input[1].splitlines()
+        input = input[1:-1]
+        
+    # 3. Generate AST
+
+        remaining_input = input
+        root = Node("root")
+
+        __parse_tree__(root,0)
+
+    # 4. Remove Type def declarations, since they are not a valuable metric
+        for node in root.descendants:
+            if "TypedefDecl" in node.name:
+                node.parent = None
+
+        return root
+    
+def print_ast(ast_tree: Node):
+    for pre, fill, node in RenderTree(ast_tree):
+        print("%s%s" % (pre,node.name))
+
+def get_ast_size(ast_tree: Node):
+    return len(ast_tree.descendants)
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -83,13 +117,3 @@ if __name__ == '__main__':
     cmd_str = "clang -Xclang -ast-dump -fsyntax-only "+args.filename
     out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
     get_ast_size(out.stdout.decode("utf-8"))
-    
-
-
-    # with open(args.filename, "r") as f:
-    #     for line in f.readlines():
-    #         code+=line
-
-    # ast_size = get_code_size(code)
-
-    # print(ast_size)
