@@ -55,9 +55,9 @@ def test4(self, program: SourceProgram) -> bool:
 
 test_function_dict = {
     "test_0": test_0,
-    "test_1": test_1,
-    "test_2": test_2,
-    "test_3": test_3
+    # "test_1": test_1,
+    # "test_2": test_2,
+    # "test_3": test_3
 }
 
 def get_test_functions():

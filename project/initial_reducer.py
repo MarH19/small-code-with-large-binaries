@@ -76,4 +76,4 @@ if __name__ == "__main__":
         print(f"Ratio obtained: {ratio}")
         reduced_code_sizes.append(ratio)
 
-    saver.save_output(p.code, ''.join(options_pool), reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)
+    saver.save_output(p.code, options_pool, reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)
