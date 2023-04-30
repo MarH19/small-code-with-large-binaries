@@ -10,18 +10,18 @@ from anytree import Node
 
 
 
-def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
-    ratio = helper.get_ratio(program,Osettings)
+# def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
+#     ratio = helper.get_ratio(program,Osettings)
 
-    #0. remove comments from code
-    code = helper.comment_remover(program.code)
+#     #0. remove comments from code
+#     code = helper.comment_remover(program.code)
 
-    print("---")
-    ast_code_size = ast_parser.get_code_size(code)
-    print(ast_code_size)
-    print("---")
+#     print("---")
+#     ast_code_size = ast_parser.get_code_size(code)
+#     print(ast_code_size)
+#     print("---")
 
-    return ratio>best_ratio and ast_code_size >30 
+#     return ratio>best_ratio and ast_code_size >30 
 
 
 
@@ -57,6 +57,9 @@ def test_2(self, program: SourceProgram) -> bool:
 def test_3(self, program: SourceProgram) -> bool:
     ratio = helper.get_ratio(program,self.Os)
     root = ast_parser.get_ast_tree(program.code)
+    
+    #ast_parser.print_ast(root) #FIXME this would only show up in logs
+
     for node in root.descendants:
             if "NullStmt" in node.name:
                 node.parent = None
@@ -100,11 +103,4 @@ class ReduceObjectSize(ReductionCallback):
             self.bestRatio = helper.get_ratio(program, self.Os)
             return True
         return False
-        
-        
-        # Check if the ratio has increased!
-        # if ratio_filter(program, self.Os, self.bestRatio):
-        #     self.bestRatio = helper.get_ratio(program, self.Os)
-        #     return True
-        # return False
     
