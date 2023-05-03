@@ -27,7 +27,7 @@ def comment_remover(text):
     )
     return re.sub(pattern, replacer, text)
 
-def clang_formatter(code):
+def clang_formatter(code: str):
     proc = subprocess.Popen(
         ["clang-format"],
         stdin=subprocess.PIPE,

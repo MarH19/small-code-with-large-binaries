@@ -55,6 +55,8 @@ if __name__ == "__main__":
         p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include",options_pool=options_pool).generate_program()
         p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
         expanded_sanitizer.sanitize(p)
+        break
+        # FIXME TODO FIXME check what role this plays. I assume it always works on the first attempt but not 100% sure
         if reduction_functions.ratio_filter(p, Os, 0): # and (res := expanded_sanitizer.sanitize(p)):
             break
     print(f"initial ratio: {helper.get_ratio(p, Os)}")

@@ -22,7 +22,7 @@ def save_output(initialcode, csmithparameters: list, generatedcode, test_functio
     with open(os.path.join(folder_name, filename_csmith), "w") as f:
         # write CSMITH parameters to file
         for i in csmithparameters:
-            f.write(i)
+            f.write(f"{i}\n")
 
 
     # add all generated codes into the created folder

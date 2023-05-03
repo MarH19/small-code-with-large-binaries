@@ -1,4 +1,4 @@
-from diopter.reducer import Reducer, ReductionCallback
+from diopter.reducer import ReductionCallback
 from diopter.sanitizer import Sanitizer
 from diopter.compiler import(
     CompilationSetting,
@@ -6,20 +6,22 @@ from diopter.compiler import(
 )
 import helper, ast_parser
 
+from anytree import Node
 
 
-def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
-    ratio = helper.get_ratio(program,Osettings)
 
-    #0. remove comments from code
-    code = helper.comment_remover(program.code)
+# def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
+#     ratio = helper.get_ratio(program,Osettings)
 
-    print("---")
-    ast_code_size = ast_parser.get_code_size(code)
-    print(ast_code_size)
-    print("---")
+#     #0. remove comments from code
+#     code = helper.comment_remover(program.code)
 
-    return ratio>best_ratio and ast_code_size >30 
+#     print("---")
+#     ast_code_size = ast_parser.get_code_size(code)
+#     print(ast_code_size)
+#     print("---")
+
+#     return ratio>best_ratio and ast_code_size >30 
 
 
 
@@ -39,25 +41,41 @@ def test_0(self, program: SourceProgram) -> bool:
 # Sets a bound to the minimum amount of lines. It simply counts the number of lines in the output, without
 #  considering their content (f.ex a line which only contains ;). We count lines on a clang-formatted file
 def test_1(self, program: SourceProgram) -> bool:
-    ...
+    formatted_code = helper.comment_remover(program.code)
+    formatted_code = helper.clang_formatter(formatted_code)
+
+    #output = [s for s in formatted_code.splitlines() if not (s.replace(";","")).isspace()] # Remove lines containing only spaces or only ;
+    ratio = helper.get_ratio(program,self.Os)
+    return ratio > self.bestRatio and len(formatted_code.splitlines())>15
 
 # Instead of counting the lines use an AST (abstract syntax tree) and count the nodes contained withn
 def test_2(self, program: SourceProgram) -> bool:
+
     ...
 
-# Start processing AST by removing 
+# Start processing AST by removing blank lines
 def test_3(self, program: SourceProgram) -> bool:
-    ...
+    ratio = helper.get_ratio(program,self.Os)
+    root = ast_parser.get_ast_tree(program.code)
+    
+    #ast_parser.print_ast(root) #FIXME this would only show up in logs
+
+    for node in root.descendants:
+            if "NullStmt" in node.name:
+                node.parent = None
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
+
 
 # Ensure that no unused functions/variables are contained in the final program
-def test4(self, program: SourceProgram) -> bool:
+def test_4(self, program: SourceProgram) -> bool:
     ... 
 
 test_function_dict = {
     "test_0": test_0,
-    # "test_1": test_1,
+    "test_1": test_1,
     # "test_2": test_2,
-    # "test_3": test_3
+    "test_3": test_3,
+    # "test_4": test_4,
 }
 
 def get_test_functions():
@@ -85,11 +103,4 @@ class ReduceObjectSize(ReductionCallback):
             self.bestRatio = helper.get_ratio(program, self.Os)
             return True
         return False
-        
-        
-        # Check if the ratio has increased!
-        # if ratio_filter(program, self.Os, self.bestRatio):
-        #     self.bestRatio = helper.get_ratio(program, self.Os)
-        #     return True
-        # return False
     
