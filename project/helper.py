@@ -10,6 +10,7 @@ from diopter.compiler import (
 )
 from diopter.generator import CSmithGenerator
 from diopter.compiler import Language
+import os
 
 
 
@@ -64,14 +65,14 @@ def get_empty_assembly_size(setting: CompilationSetting) -> int:
             language=Language.C,
             defined_macros=(),
             include_paths=(),
-            system_include_paths=("/home/chris/.bin/csmith/build/include"),
+            system_include_paths=(os.environ['CSMITH_H_PATH']),
             flags=(),
         )
 
     bianryLength = setting.compile_program(
         program, 
         ObjectCompilationOutput(None),
-        additional_flags=["-I" "/home/chris/.bin/csmith/build/include/"]).output.text_size()
+        additional_flags=["-I", os.environ['CSMITH_H_PATH']]).output.text_size()
 
     return bianryLength
 

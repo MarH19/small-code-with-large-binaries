@@ -11,6 +11,7 @@ import ast_parser
 import reduction_functions
 import saver
 import logging
+import os
 
 from diopter.compiler import (
     CompilationSetting,
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
     while True:
         options_pool = helper.generate_csmith_flags()
-        p = CSmithGenerator(sanitizer,include_path="/home/chris/.bin/csmith/build/include",options_pool=options_pool).generate_program()
+        p = CSmithGenerator(sanitizer,include_path=os.environ['CSMITH_H_PATH'],options_pool=options_pool).generate_program()
         p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
         expanded_sanitizer.sanitize(p)
         break
