@@ -4,7 +4,7 @@ RUN apt-get -y update
 RUN apt-get -y install build-essential cmake clang vim git python3 python3-pip python-is-python3 creduce csmith g++ m4 ctags clang-format
 
 
-RUN pip install diopter
+RUN pip install diopter anytree
 
 WORKDIR /home
 
@@ -19,3 +19,6 @@ RUN make && make install
 
 #TODO check if this has to be done as entrypoint
 RUN export PATH=$PATH:/home/csmith/build/bin 
+
+ARG CSMITH_H_PATH=/home/csmith/build/include
+WORKDIR /home/project
