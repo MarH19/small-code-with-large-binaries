@@ -5,6 +5,9 @@ Make sure to install all required dependencies, as well as running `export CSMIT
 To select what test functions to run open `reduction_functions.py` and comment in the tests you want to perform in the `test_function_dict` dictionary.
 Start the reduction process by launching `inital_reducer.py`.
 
+### Helper functions
+To get the AST for any of the generated .c code  run `python ast_parser -f filepath/filename.c`
+
 
 ### Setting up docker container
 Start a new container with `sudo docker-compose up`

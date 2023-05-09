@@ -83,7 +83,7 @@ def test_5(self, program: SourceProgram) -> bool:
 def test_6(self, program: SourceProgram) -> bool:
     program = annotate_with_static(program)
 
-    # return test_4(self, program) ------------------------- TODO check what is more clear, rewriting test_4 or calling it
+    # return test_4(self, program) ------------------------- TODO check what is more clear, rewriting test_4, as done below or calling it
 
     root = ast_parser.get_ast_tree(program.code)
     ratio = helper.get_tree_ratio(program,self.Os,root)
