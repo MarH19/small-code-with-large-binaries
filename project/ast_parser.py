@@ -116,4 +116,5 @@ if __name__ == '__main__':
     code = ""
     cmd_str = "clang -Xclang -ast-dump -fsyntax-only "+args.filename
     out = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE)
-    get_ast_size(out.stdout.decode("utf-8"))
+    print(out)
+    # get_ast_size(out.stdout.decode("utf-8"))
