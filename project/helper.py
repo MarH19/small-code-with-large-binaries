@@ -12,6 +12,9 @@ from diopter.generator import CSmithGenerator
 from diopter.compiler import Language
 import os
 import tempfile
+from anytree import Node
+import ast_parser
+
 
 
 # Source Stack-overflow: https://stackoverflow.com/questions/241327/remove-c-and-c-comments-using-python
@@ -107,3 +110,13 @@ def get_unused_var(program):
 
 
 
+def get_tree_ratio(program: SourceProgram, setting: CompilationSetting, ast_tree: Node) ->float:
+    codeLength = ast_parser.get_ast_size(ast_tree)
+
+    binaryLength = setting.compile_program(
+        program, ObjectCompilationOutput(None)
+        ).output.text_size()
+    
+    ratio = (binaryLength-get_empty_assembly_size(setting))/codeLength
+
+    return ratio

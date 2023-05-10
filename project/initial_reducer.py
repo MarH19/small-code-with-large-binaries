@@ -29,6 +29,8 @@ import sys
 from subprocess import call
 import re
 
+from static_globals.instrumenter import annotate_with_static
+
 
 
 def get_size(program: SourceProgram, setting: CompilationSetting) -> int:
@@ -47,7 +49,6 @@ if __name__ == "__main__":
         opt_level=OptLevel.Os,
         flags=("-march=native",),
     )
-    #Wunused-variable
     expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
     expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
     sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
@@ -71,12 +72,18 @@ if __name__ == "__main__":
         rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))  # , debug=True)
         assert rprogram
 
+
+        if test_id == "test_6": # We save the generated program with static variables, since this is what we use as a metric in test_6
+            rprogram = annotate_with_static(rprogram)
+
+
         output_code = helper.clang_formatter(rprogram.code)
         reduced_code_samples.append(output_code)
-        test_names.append(test_id) #FIXME get the function name to be appended!!!!!
+        test_names.append(test_id)
 
         ratio = helper.get_ratio(rprogram, Os)
         print(f"Ratio obtained: {ratio}")
         reduced_code_sizes.append(ratio)
+        #TODO Saver class which incrementally saves code
 
     saver.save_output(p.code, options_pool, reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)

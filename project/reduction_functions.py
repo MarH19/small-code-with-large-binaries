@@ -8,6 +8,8 @@ import helper, ast_parser
 import re
 from anytree import Node
 
+from static_globals.instrumenter import annotate_with_static
+
 
 
 # def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
@@ -50,7 +52,7 @@ def test_1(self, program: SourceProgram) -> bool:
 
 # Instead of counting the lines use an AST (abstract syntax tree) and count the nodes contained withn
 def test_2(self, program: SourceProgram) -> bool:
-
+    # Legacy test do not remove
     ...
 
 # Start processing AST by removing blank lines
@@ -66,8 +68,15 @@ def test_3(self, program: SourceProgram) -> bool:
     return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 
-# Ensure that no unused functions/variables are contained in the final program
+# Compute the ratio using AST instead of plain lines of code
 def test_4(self, program: SourceProgram) -> bool:
+    root = ast_parser.get_ast_tree(program.code)
+    ratio = helper.get_tree_ratio(program,self.Os,root)
+
+    return ratio > self.bestRatio
+
+# Ensure that no unused functions/variables are contained in the final program and count as tree nodes
+def test_5(self, program: SourceProgram) -> bool:
     ratio = helper.get_ratio(program,self.Os)
     root = ast_parser.get_ast_tree(program.code)
     # pattern in unused var: 1. warning (type) 2. value of wunused var or function 3. ^
@@ -104,12 +113,25 @@ def test_4(self, program: SourceProgram) -> bool:
           
     return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
+# Make global variables and functions (except main) static
+def test_6(self, program: SourceProgram) -> bool:
+    program = annotate_with_static(program)
+
+    # return test_4(self, program) ------------------------- TODO check what is more clear, rewriting test_4, as done below or calling it
+
+    root = ast_parser.get_ast_tree(program.code)
+    ratio = helper.get_tree_ratio(program,self.Os,root)
+
+    return ratio > self.bestRatio
+
 test_function_dict = {
-    #"test_0": test_0,
-    #"test_1": test_1,
+    # "test_0": test_0,
+    # "test_1": test_1,
     # "test_2": test_2,
-    #"test_3": test_3,
-    "test_4": test_4,
+    # "test_3": test_3,
+    # "test_4": test_4,
+    # "test_5": test_5
+    "test_6":test_6,
 }
 
 def get_test_functions():
