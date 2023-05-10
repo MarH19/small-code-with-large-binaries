@@ -5,7 +5,7 @@ from diopter.compiler import(
     SourceProgram
 )
 import helper, ast_parser
-
+import re
 from anytree import Node
 
 from static_globals.instrumenter import annotate_with_static
@@ -77,7 +77,41 @@ def test_4(self, program: SourceProgram) -> bool:
 
 # Ensure that no unused functions/variables are contained in the final program and count as tree nodes
 def test_5(self, program: SourceProgram) -> bool:
-    ... 
+    ratio = helper.get_ratio(program,self.Os)
+    root = ast_parser.get_ast_tree(program.code)
+    # pattern in unused var: 1. warning (type) 2. value of wunused var or function 3. ^
+    unused_var = helper.get_unused_var(program)
+    wunused = []
+    existing_values = set()
+    for idx, i in enumerate(unused_var):
+        # code to check for which types of warnings there are in the code 
+        match = re.search(r'\[(.*?)\]', i)
+        if match:
+            value_inside_brackets = match.group(1)
+            if value_inside_brackets not in existing_values:
+                existing_values.add(value_inside_brackets)
+
+        # add -Wunused-variable warnings to a list
+        if "[-Wunused-variable]" in i:
+            wunused.append((unused_var[idx],unused_var[idx+1]))
+            
+    for node in root.descendants:
+        # check for wunused variables in AST
+        if "DeclStmt" in node.name: 
+            for idx, i in enumerate(wunused):
+                # extract line and column number of the wunused list
+                lincol_numbers = wunused[idx][0].split(":")[1:3]
+                # check if line number matches
+                if lincol_numbers[0] in node.name:
+                    # iterate over all "VarDecl" and check if column number matches
+                    for i in node.children:
+                        if lincol_numbers[1] in i.name:
+                            node.parent = None
+        if "NullStmt" in node.name:
+            node.parent = None
+
+          
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 # Make global variables and functions (except main) static
 def test_6(self, program: SourceProgram) -> bool:
@@ -96,6 +130,7 @@ test_function_dict = {
     # "test_2": test_2,
     # "test_3": test_3,
     # "test_4": test_4,
+    # "test_5": test_5
     "test_6":test_6,
 }
 

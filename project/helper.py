@@ -11,6 +11,7 @@ from diopter.compiler import (
 from diopter.generator import CSmithGenerator
 from diopter.compiler import Language
 import os
+import tempfile
 from anytree import Node
 import ast_parser
 
@@ -88,6 +89,26 @@ def get_ratio(program: SourceProgram, setting: CompilationSetting) -> float:
     ratio = (binaryLength-get_empty_assembly_size(setting))/codeLength
 
     return ratio
+
+
+def get_unused_var(program):
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        f.write(program.code)
+        input_filename = f.name
+
+    proc = subprocess.Popen(
+        ["clang", "-Wunused","-x","c", input_filename],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        shell=False
+    )
+
+    stdout, stderr = proc.communicate()
+
+    return stderr.strip().splitlines()
+
+
 
 def get_tree_ratio(program: SourceProgram, setting: CompilationSetting, ast_tree: Node) ->float:
     codeLength = ast_parser.get_ast_size(ast_tree)
