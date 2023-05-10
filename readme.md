@@ -1,9 +1,9 @@
 ### Running the code
-*Before starting any run* ensure that you only enable the test funcitons you want to run. If you decide to use all of them you will have to wait multiple hours. *Results are only saved at the end of the run!*
+**Before starting any run** ensure that you only enable the test funcitons you want to run. If you decide to use all of them you will have to wait multiple hours. **Results are only saved at the end of each test!**
 
 Make sure to install all required dependencies, as well as running `export CSMITH_H_PATH=/home/csmith/build/include`, adapting the location based on your machine.
 To select what test functions to run open `reduction_functions.py` and comment in the tests you want to perform in the `test_function_dict` dictionary.
-Start the reduction process by launching `inital_reducer.py`.
+Start the reduction process by running `python project/inital_reducer.py`.
 
 ### Helper functions
 To get the AST for any of the generated .c code  run `python ast_parser -f filepath/filename.c`

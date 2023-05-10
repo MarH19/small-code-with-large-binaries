@@ -9,6 +9,8 @@ import re
 from anytree import Node
 
 from static_globals.instrumenter import annotate_with_static
+from saver import ProgressiveSaver
+import saver
 
 
 
@@ -119,13 +121,13 @@ def test_6(self, program: SourceProgram) -> bool:
 
 
 test_function_dict = {
-    # "test_0": test_0,
-    # "test_1": test_1,
+    "test_0": test_0,
+    "test_1": test_1,
     # "test_2": test_2,
     # "test_3": test_3,
     # "test_4": test_4,
     # "test_5": test_5
-    "test_6":test_6,
+    # "test_6":test_6,
 }
 
 def get_test_functions():
@@ -137,17 +139,22 @@ class ReduceObjectSize(ReductionCallback):
         self,
         san: Sanitizer,
         Os: CompilationSetting,
-        test_id: int,
+        test_id,
+        progr_saver=None
     ):
         self.san = san
         self.Os = Os
         self.bestRatio = 0
         self.test_id = test_id
+        self.progr_saver = progr_saver
     
     def test(self, program: SourceProgram) -> bool:
         if not (res := self.san.sanitize(program)):
             print(f" {res} Sani fail")
-            return False     
+            return False
+        
+        if self.progr_saver is not None:
+            self.progr_saver.save_test_substep(self.test_id, program.code, helper.get_ratio(program, self.Os))
 
         if test_function_dict[self.test_id](self, program):
             self.bestRatio = helper.get_ratio(program, self.Os)

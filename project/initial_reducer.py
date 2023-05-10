@@ -9,6 +9,7 @@ import tempfile
 import helper
 import ast_parser
 import reduction_functions
+from saver import ProgressiveSaver
 import saver
 import logging
 import os
@@ -49,41 +50,32 @@ if __name__ == "__main__":
         opt_level=OptLevel.Os,
         flags=("-march=native",),
     )
-    expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
-    expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
+    # expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
+    # expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
     sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
     while True:
         options_pool = helper.generate_csmith_flags()
         p = CSmithGenerator(sanitizer,include_path=os.environ['CSMITH_H_PATH'],options_pool=options_pool).generate_program()
         p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
-        expanded_sanitizer.sanitize(p)
-        break
-        # FIXME TODO FIXME check what role this plays. I assume it always works on the first attempt but not 100% sure
-        if reduction_functions.ratio_filter(p, Os, 0): # and (res := expanded_sanitizer.sanitize(p)):
+        #expanded_sanitizer.sanitize(p)
+        if sanitizer.sanitize(p):
             break
     print(f"initial ratio: {helper.get_ratio(p, Os)}")
     # import pdb; pdb.set_trace()
-    reduced_code_samples = []
-    reduced_code_sizes = []
-    test_names = []
+
+    progr_saver = ProgressiveSaver(p.code, helper.get_ratio(p, Os), options_pool)
 
     for test_id in reduction_functions.get_test_functions():
         print(f"Starting reduction with {test_id}")
-        rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))  # , debug=True)
+        # rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))  # , debug=True)
+        rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver)) # <- Use this if you want to save progress statistics (!slower) #TODO enable this as a flag --progress-trace
         assert rprogram
-
 
         if test_id == "test_6": # We save the generated program with static variables, since this is what we use as a metric in test_6
             rprogram = annotate_with_static(rprogram)
 
-
         output_code = helper.clang_formatter(rprogram.code)
-        reduced_code_samples.append(output_code)
-        test_names.append(test_id)
 
         ratio = helper.get_ratio(rprogram, Os)
         print(f"Ratio obtained: {ratio}")
-        reduced_code_sizes.append(ratio)
-        #TODO Saver class which incrementally saves code
-
-    saver.save_output(p.code, options_pool, reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)
+        progr_saver.save_test(test_id, output_code, ratio)
