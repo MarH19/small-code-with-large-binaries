@@ -49,23 +49,17 @@ class ProgressiveSaver():
         row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
 
         # add all generated codes into the created folder
-        for idx, i in enumerate(generatedcode):
-            filename_gen = f"generated-{idx}.c"
-            with open(os.path.join(folder_name, filename_gen), "w") as g:
-                # write C code to file
-                g.write(i)
-        
-        improvements = []
-        for i in ratio:
-            improvements.append(i/initial_ratio)
-
+        filename_gen = f"generated-{self.test_index}.c"
+        with open(os.path.join(self.folder_name, filename_gen), "w") as f:
+            f.write(generated_code)
         
         with open(os.path.join(self.folder_name,'info.csv'), 'a', newline='\n') as csvfile:
             writer = csv.writer(csvfile,delimiter=",")
             # Write the row to the CSV file 
             writer.writerow(row)
 
-
+        
+        self.test_index += 1
 
 def save_output(initialcode, csmithparameters: list, generatedcode, test_functions: list, initial_ratio,ratio: list):
     # get current timestamp in the format YYYY-MM-DD-HH-MM-SS
@@ -122,10 +116,21 @@ def save_output(initialcode, csmithparameters: list, generatedcode, test_functio
             writer.writerow(elements)
 
 if __name__ == "__main__":
-    code = "adsada"
-    csmith = ["ds","dsfdf","fsd","sfsdf","sdf"]
+    code = "csmith_adsada"
+    code_1 = "generated_1"
+    code_2 = "generated_2"
 
-    save_output(code, csmith, [code, code],["test 1", "test 2"], 0.4, [0.1, 0.15])
+    ratio = 0.1
+    ratio_1 = 0.8
+    ratio_2 = 1.1
+
+
+    csmith_params = ["ds","dsfdf","fsd","sfsdf","sdf"]
+    saver = ProgressiveSaver(code,csmith_params,ratio)
+
+    saver.save_test("test_1",code_1,ratio_1)
+    saver.save_test("test_2",code_2,ratio_2)
+
 
     
 
