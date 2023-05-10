@@ -2,6 +2,71 @@ import os
 import csv
 from datetime import datetime
 
+
+class ProgressiveSaver():
+    def __init__(
+            self,
+            initial_code: str,
+            csmith_parameters: list|None,
+            initial_ratio
+        ):
+        # get current timestamp in the format YYYY-MM-DD-HH-MM-SS
+        self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.folder_name = f"outputs/test_run-{self.timestamp}"
+        self.initial_ratio = initial_ratio
+        self.test_index = 0
+        
+        # create folder if it does not exist
+        if not os.path.exists(self.folder_name):
+            os.makedirs(self.folder_name)
+            print(f"Created folder {self.folder_name}")
+
+        
+        if csmith_parameters is not None:
+            filename_initial = f"initial-csmith-{self.timestamp}.c"
+            filename_csmith = "CSMITH_parameters.txt"
+            with open(os.path.join(self.folder_name, filename_csmith), "w") as f:
+                # write CSMITH parameters to file
+                for i in csmith_parameters:
+                    f.write(f"{i}\n")
+        else:
+            filename_initial = f"initial-recved-{self.timestamp}.c"
+            
+        # add initial code to created folder
+        with open(os.path.join(self.folder_name, filename_initial), "w") as f:
+            # write C code to file
+            f.write(initial_code)
+
+
+        with open(os.path.join(self.folder_name,'info.csv'), 'w', newline='\n') as csvfile:
+            # Create a writer object
+            writer = csv.writer(csvfile,delimiter=",")
+            # Write the column names to the CSV file
+            writer.writerow(['test functions','initial ratio','final ratio','improvement'])
+
+    def save_test(self, test_function_name: str, generated_code, obtained_ratio):
+
+        row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
+
+        # add all generated codes into the created folder
+        for idx, i in enumerate(generatedcode):
+            filename_gen = f"generated-{idx}.c"
+            with open(os.path.join(folder_name, filename_gen), "w") as g:
+                # write C code to file
+                g.write(i)
+        
+        improvements = []
+        for i in ratio:
+            improvements.append(i/initial_ratio)
+
+        
+        with open(os.path.join(self.folder_name,'info.csv'), 'a', newline='\n') as csvfile:
+            writer = csv.writer(csvfile,delimiter=",")
+            # Write the row to the CSV file 
+            writer.writerow(row)
+
+
+
 def save_output(initialcode, csmithparameters: list, generatedcode, test_functions: list, initial_ratio,ratio: list):
     # get current timestamp in the format YYYY-MM-DD-HH-MM-SS
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
