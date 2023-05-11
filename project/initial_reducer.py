@@ -33,6 +33,7 @@ from subprocess import call
 import re
 
 from static_globals.instrumenter import annotate_with_static
+from logging_helper import logger
 
 
 
@@ -71,10 +72,14 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
         if not trace_run:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
         else:
-            print("Tracing program. This will gratly increase runtime!")
+            logger.info("Tracing program. This will gratly increase runtime!")
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
 
-        assert rprogram # FIXME replace assert with a more smooth handling of failures
+        try:
+            assert rprogram
+        except:
+            logger.error(f"Failed reduction on {test_id}")
+            continue
 
         if test_id == "test_6": # We save the generated program with static variables, since this is what we use as a metric in test_6
             rprogram = annotate_with_static(rprogram)
@@ -101,12 +106,12 @@ if __name__ == '__main__':
     sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os)
 
     if args.filename is not None:
-        print("Using input code for reductions")
+        logger.info("Using input code for reductions")
         options_pool = None
         p = helper.file_to_SourceProgram(args.filename) 
 
     else:
-        print("Generating code with CSMITH")
+        logger.info("Generating code with CSMITH")
         options_pool=helper.generate_csmith_flags()
         p = generate_csmith(sanitizer, options_pool)
 
@@ -115,8 +120,8 @@ if __name__ == '__main__':
     perform_reduction(p, progr_saver, args.trace_run)
 
 #Tasks: c
-# Cleanly handle when a test fails
+# - Cleanly handle when a test fails
 # - Take a file as an inpout and run that instead of the generated csmith code
 # - flags for plotting/non plotting
-# save progress in intermediate files
-# Use debug printing
+# Save progress in intermediate files
+# - Use debug printing

@@ -123,7 +123,6 @@ def test_6(self, program: SourceProgram) -> bool:
 test_function_dict = {
     "test_0": test_0,
     "test_1": test_1,
-    # "test_2": test_2,
     # "test_3": test_3,
     # "test_4": test_4,
     # "test_5": test_5,
