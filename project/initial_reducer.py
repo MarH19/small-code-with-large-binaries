@@ -118,10 +118,3 @@ if __name__ == '__main__':
     progr_saver = ProgressiveSaver(p.code, helper.get_ratio(p, Os), options_pool)
 
     perform_reduction(p, progr_saver, args.trace_run)
-
-#Tasks: c
-# - Cleanly handle when a test fails
-# - Take a file as an inpout and run that instead of the generated csmith code
-# - flags for plotting/non plotting
-# Save progress in intermediate files
-# - Use debug printing

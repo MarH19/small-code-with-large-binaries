@@ -1,6 +1,6 @@
 import os
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # current_saver = None
@@ -20,6 +20,7 @@ class ProgressiveSaver():
         self.test_index = 0
         self.current_test_ratios = []
         self.last_snapshot_time = datetime.now()
+        self.snapshot_id = 0
 
         # create folder if it does not exist
         if not os.path.exists(self.folder_name):
@@ -51,7 +52,7 @@ class ProgressiveSaver():
 
 
     # We use this function while runnig a test, to save the progress of the ratio, as well as progressively saving the generated code   
-    def save_test_substep(self, test_function_name: str, code: str, current_ratio):
+    def save_test_substep(self, test_function_name:str, code:str, current_ratio):
         snapshot_folder = os.path.join(self.folder_name, f"snapshots-{test_function_name}")
         if not os.path.exists(snapshot_folder):
             os.makedirs(snapshot_folder)
@@ -62,8 +63,11 @@ class ProgressiveSaver():
             writer.writerow([current_ratio])
         csvfile.close()
 
-        #if datetime.now()-self.last_snapshot_time > 5 minutes:
         #outputs/test_run_121212/snapshots_test_i/snapshot_i
+        if datetime.now() >= self.last_snapshot_time + timedelta(minutes=5):
+            with open(os.path.join(os.path.join(snapshot_folder, f"snapshot-{self.snapshot_id}.c")), "w") as f:
+                f.write(code)
+            self.snapshot_id += 1
 
     def save_test(self, test_function_name: str, generated_code, obtained_ratio):
         row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
@@ -79,6 +83,8 @@ class ProgressiveSaver():
             writer.writerow(row)
 
         self.current_test_ratios = []
+        self.snapshot_id = 0
+        self.last_snapshot_time = datetime.now()
         self.test_index += 1
 
 if __name__ == "__main__":
