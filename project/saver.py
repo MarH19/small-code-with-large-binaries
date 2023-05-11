@@ -17,7 +17,6 @@ class ProgressiveSaver():
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.folder_name = os.path.join(os.path.abspath(os.getcwd()),f"outputs/test_run-{self.timestamp}")
         self.initial_ratio = initial_ratio
-        self.test_index = 0
         self.current_test_ratios = []
         self.last_snapshot_time = datetime.now()
         self.snapshot_id = 0
@@ -74,7 +73,7 @@ class ProgressiveSaver():
         row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
 
         # add all generated codes into the created folder
-        filename_gen = f"generated-{self.test_index}.c"
+        filename_gen = f"generated-{test_function_name}.c"
         with open(os.path.join(self.folder_name, filename_gen), "w") as f:
             f.write(generated_code)
         
@@ -86,7 +85,6 @@ class ProgressiveSaver():
         self.current_test_ratios = []
         self.snapshot_id = 0
         self.last_snapshot_time = datetime.now()
-        self.test_index += 1
 
 if __name__ == "__main__":
     code = "csmith_adsada"
