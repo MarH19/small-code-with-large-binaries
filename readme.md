@@ -7,7 +7,7 @@ Make sure to install all required dependencies, as well as running `export CSMIT
 
 **Flags**
 You can use the following flags when performing reductions:
-- `python project/inital_reducer.py -f filename.c` This allows you to pass a file as input to the reduction algorithm, instead of generating code with creduce
+- `python project/inital_reducer.py -f filename.c` This allows you to pass a file as input to the reduction algorithm, instead of generating code with csmith
 - `python project/inital_reducer.py -t` Trace option, saves a snapshots-test#/resport.csv file which contains the ratio reached at each reduction step. It also saves the reduced code every 5 minutes n the same folder.
 
 ### Helper functions

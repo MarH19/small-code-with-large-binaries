@@ -55,12 +55,20 @@ Os = CompilationSetting(
 
 
 def generate_csmith(sanitizer: Sanitizer, options_pool):
+    logger.info(f"csmith attempting generation using {options_pool}")
+    generation_failure_limit = 500
     while True:
         p = CSmithGenerator(sanitizer,include_path=os.environ['CSMITH_H_PATH'],options_pool=options_pool).generate_program()
         p = clangOs.preprocess_program(p, make_compiler_agnostic=True)
         #expanded_sanitizer.sanitize(p)
         if sanitizer.sanitize(p):
             break
+
+        # Sometimes the options_pool contains parameters which make the sanitizer always fail. If this is the case we want to stop the program
+        generation_failure_limit -=1
+        if generation_failure_limit == 0:
+            logger.error(f"Failed generating code using following csmith parameters:\n{options_pool}")
+            raise RecursionError
     return p
 
 
@@ -68,7 +76,7 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
     print(f"initial ratio: {helper.get_ratio(p, Os)}")
 
     for test_id in reduction_functions.get_test_functions():
-        print(f"Starting reduction with {test_id}")
+        logger.info(f"Starting reduction with {test_id}")
         if not trace_run:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
         else:
