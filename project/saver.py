@@ -17,9 +17,7 @@ class ProgressiveSaver():
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.folder_name = os.path.join(os.path.abspath(os.getcwd()),f"outputs/test_run-{self.timestamp}")
         self.initial_ratio = initial_ratio
-        self.current_test_ratios = []
-        self.last_snapshot_time = datetime.now()
-        self.snapshot_id = 0
+        self.save_snapshot_each_n = 500
 
         # create folder if it does not exist
         if not os.path.exists(self.folder_name):
@@ -62,12 +60,20 @@ class ProgressiveSaver():
             writer.writerow([current_ratio])
         csvfile.close()
 
+        with open(os.path.join(snapshot_folder,'report.csv'), 'r') as f:
+            row_count = sum(1 for row in f) 
+
+        if row_count % self.save_snapshot_each_n == 0 and row_count>0:
+                with open(os.path.join(os.path.join(snapshot_folder, f"snapshot-{row_count//self.save_snapshot_each_n}.c")), "w") as f:
+                    f.write(code)
+
+        # We cannot use timestamps, thus we use step count, since a new instance of the saver is used in each iteration
         #outputs/test_run_121212/snapshots_test_i/snapshot_i
-        if datetime.now() >= self.last_snapshot_time + timedelta(minutes=5):
-            with open(os.path.join(os.path.join(snapshot_folder, f"snapshot-{self.snapshot_id}.c")), "w") as f:
-                f.write(code)
-            self.snapshot_id += 1
-            self.last_snapshot_time = datetime.now()
+        # if datetime.now() >= self.last_snapshot_time + timedelta(seconds=10):
+        #     with open(os.path.join(os.path.join(snapshot_folder, f"snapshot-{self.snapshot_id}.c")), "w") as f:
+        #         f.write(code)
+        #     self.last_snapshot_time = datetime.now()
+        #     self.snapshot_id += 1
 
     def save_test(self, test_function_name: str, generated_code, obtained_ratio):
         row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
@@ -82,9 +88,8 @@ class ProgressiveSaver():
             # Write the row to the CSV file 
             writer.writerow(row)
 
-        self.current_test_ratios = []
-        self.snapshot_id = 0
-        self.last_snapshot_time = datetime.now()
+        # self.snapshot_id = 0
+        # self.last_snapshot_time = datetime.now()
 
 if __name__ == "__main__":
     code = "csmith_adsada"
