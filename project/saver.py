@@ -68,6 +68,7 @@ class ProgressiveSaver():
             with open(os.path.join(os.path.join(snapshot_folder, f"snapshot-{self.snapshot_id}.c")), "w") as f:
                 f.write(code)
             self.snapshot_id += 1
+            self.last_snapshot_time = datetime.now()
 
     def save_test(self, test_function_name: str, generated_code, obtained_ratio):
         row = [test_function_name, self.initial_ratio, obtained_ratio, obtained_ratio/self.initial_ratio]
