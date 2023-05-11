@@ -7,6 +7,7 @@ from diopter.compiler import (
     ObjectCompilationOutput,
     OptLevel
 )
+import os
 
 Os = CompilationSetting(
     compiler=CompilerExe.get_system_gcc(),
@@ -33,10 +34,11 @@ with open(args.filename, "r") as f:
             language=Language.C,
             defined_macros=(),
             include_paths=(),
-            system_include_paths=("/home/chris/.bin/csmith/build/include"),
+            system_include_paths=os.environ['CSMITH_H_PATH'],
             flags=(),
     )    
 
+    assert False # This might not even need to be fixed. Since it never gets used, but fix the include path below before removing the assert =/
     bianryLength = Os.compile_program(
         program, 
         ObjectCompilationOutput(None),

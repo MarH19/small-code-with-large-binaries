@@ -5,10 +5,12 @@ This diopter program is used to generate and reduce a csmith
 that results in a disproportionate ratio between binary and source code
 """
 
+from argparse import ArgumentParser
 import tempfile
 import helper
 import ast_parser
 import reduction_functions
+from saver import ProgressiveSaver
 import saver
 import logging
 import os
@@ -20,6 +22,7 @@ from diopter.compiler import (
     OptLevel,
     SourceProgram,
 )
+from diopter.compiler import Language
 from diopter.generator import CSmithGenerator
 from diopter.reducer import Reducer, ReductionCallback
 from diopter.sanitizer import Sanitizer
@@ -30,6 +33,7 @@ from subprocess import call
 import re
 
 from static_globals.instrumenter import annotate_with_static
+from logging_helper import logger
 
 
 
@@ -38,52 +42,87 @@ def get_size(program: SourceProgram, setting: CompilationSetting) -> int:
         program, ObjectCompilationOutput(None)
     ).output.text_size()
 
-if __name__ == "__main__":
-    Os = CompilationSetting(
-        compiler=CompilerExe.get_system_gcc(),
-        opt_level=OptLevel.Os,
-        flags=("-march=native",),
-    )
-    sanOs = CompilationSetting(
+clangOs = CompilationSetting(
         compiler=CompilerExe.get_system_clang(),
         opt_level=OptLevel.Os,
         flags=("-march=native",),
     )
-    expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
-    expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
-    sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os) #FIXME it seems that no "unused warning" is issued???
+Os = CompilationSetting(
+        compiler=CompilerExe.get_system_gcc(),
+        opt_level=OptLevel.Os,
+        flags=("-march=native",),
+    )
+
+
+def generate_csmith(sanitizer: Sanitizer, options_pool):
+    logger.info(f"csmith attempting generation using {options_pool}")
+    generation_failure_limit = 500
     while True:
-        options_pool = helper.generate_csmith_flags()
         p = CSmithGenerator(sanitizer,include_path=os.environ['CSMITH_H_PATH'],options_pool=options_pool).generate_program()
-        p = sanOs.preprocess_program(p, make_compiler_agnostic=True)
-        expanded_sanitizer.sanitize(p)
-        break
-        # FIXME TODO FIXME check what role this plays. I assume it always works on the first attempt but not 100% sure
-        if reduction_functions.ratio_filter(p, Os, 0): # and (res := expanded_sanitizer.sanitize(p)):
+        p = clangOs.preprocess_program(p, make_compiler_agnostic=True)
+        #expanded_sanitizer.sanitize(p)
+        if sanitizer.sanitize(p):
             break
+
+        # Sometimes the options_pool contains parameters which make the sanitizer always fail. If this is the case we want to stop the program
+        generation_failure_limit -=1
+        if generation_failure_limit == 0:
+            logger.error(f"Failed generating code using following csmith parameters:\n{options_pool}")
+            raise RecursionError
+    return p
+
+
+def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run: bool):
     print(f"initial ratio: {helper.get_ratio(p, Os)}")
-    # import pdb; pdb.set_trace()
-    reduced_code_samples = []
-    reduced_code_sizes = []
-    test_names = []
 
     for test_id in reduction_functions.get_test_functions():
-        print(f"Starting reduction with {test_id}")
-        rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))  # , debug=True)
-        assert rprogram
+        logger.info(f"Starting reduction with {test_id}")
+        if not trace_run:
+            rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
+        else:
+            logger.info("Tracing program. This will gratly increase runtime!")
+            rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
 
+        try:
+            assert rprogram
+        except:
+            logger.error(f"Failed reduction on {test_id}")
+            continue
 
         if test_id == "test_6": # We save the generated program with static variables, since this is what we use as a metric in test_6
             rprogram = annotate_with_static(rprogram)
 
-
         output_code = helper.clang_formatter(rprogram.code)
-        reduced_code_samples.append(output_code)
-        test_names.append(test_id)
 
         ratio = helper.get_ratio(rprogram, Os)
         print(f"Ratio obtained: {ratio}")
-        reduced_code_sizes.append(ratio)
-        #TODO Saver class which incrementally saves code
+        progr_saver.save_test(test_id, output_code, ratio)
 
-    saver.save_output(p.code, options_pool, reduced_code_samples, test_names, helper.get_ratio(p, Os), reduced_code_sizes)
+
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("-f", "--file", dest="filename",
+                        help="FILE from which start reduction. Leave empty for csmith generation", metavar="FILE")
+    parser.add_argument('-t', dest='trace_run', action='store_true', 
+                        help='Trace the execution of the program by saving progress of reduction size as well as code snapshots at regular intervals')
+    args = parser.parse_args()
+
+    # expanded_warnings = Sanitizer.default_warnings +('Wunused-variable',) #We always get this warning =/
+    # expanded_sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os, checked_warnings=expanded_warnings)
+    sanitizer = Sanitizer(debug=True, check_warnings_opt_level=OptLevel.Os)
+
+    if args.filename is not None:
+        logger.info("Using input code for reductions")
+        options_pool = None
+        p = helper.file_to_SourceProgram(args.filename) 
+
+    else:
+        logger.info("Generating code with CSMITH")
+        options_pool=helper.generate_csmith_flags()
+        p = generate_csmith(sanitizer, options_pool)
+
+    progr_saver = ProgressiveSaver(p.code, helper.get_ratio(p, Os), options_pool)
+
+    perform_reduction(p, progr_saver, args.trace_run)

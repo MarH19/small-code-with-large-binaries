@@ -54,6 +54,23 @@ def generate_csmith_flags():
     return options_pool
 
 
+def file_to_SourceProgram(file_name)-> SourceProgram:
+    with open(file_name, "r") as f:
+        code = ""
+        for line in f.readlines():
+            code+=line
+
+        program = SourceProgram(
+                code=code,
+                language=Language.C,
+                defined_macros=(),
+                include_paths=(),
+                system_include_paths=os.environ['CSMITH_H_PATH'],
+                flags=(),
+        )
+    return program
+
+
 # ========================================
 #  Options used to calculate sizes 
 #       - of assembly code, compute ratios 

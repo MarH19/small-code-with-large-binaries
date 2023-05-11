@@ -9,6 +9,8 @@ import re
 from anytree import Node
 
 from static_globals.instrumenter import annotate_with_static
+from saver import ProgressiveSaver
+import saver
 
 
 
@@ -77,7 +79,6 @@ def test_4(self, program: SourceProgram) -> bool:
 
 # Ensure that no unused functions/variables are contained in the final program and count as tree nodes
 def test_5(self, program: SourceProgram) -> bool:
-    ratio = helper.get_ratio(program,self.Os)
     root = ast_parser.get_ast_tree(program.code)
     # pattern in unused var: 1. warning (type) 2. value of wunused var or function 3. ^
     unused_var = helper.get_unused_var(program)
@@ -110,27 +111,21 @@ def test_5(self, program: SourceProgram) -> bool:
         if "NullStmt" in node.name:
             node.parent = None
 
-          
-    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
+    ratio = helper.get_tree_ratio(program, self.Os, root)
+    return ratio > self.bestRatio
 
 # Make global variables and functions (except main) static
 def test_6(self, program: SourceProgram) -> bool:
     program = annotate_with_static(program)
+    return test_4(self, program)
 
-    # return test_4(self, program) ------------------------- TODO check what is more clear, rewriting test_4, as done below or calling it
-
-    root = ast_parser.get_ast_tree(program.code)
-    ratio = helper.get_tree_ratio(program,self.Os,root)
-
-    return ratio > self.bestRatio
 
 test_function_dict = {
-    # "test_0": test_0,
-    # "test_1": test_1,
-    # "test_2": test_2,
-    # "test_3": test_3,
-    # "test_4": test_4,
-    # "test_5": test_5
+    "test_0": test_0,
+    "test_1": test_1,
+    "test_3": test_3,
+    "test_4": test_4,
+    "test_5": test_5,
     "test_6":test_6,
 }
 
@@ -143,17 +138,22 @@ class ReduceObjectSize(ReductionCallback):
         self,
         san: Sanitizer,
         Os: CompilationSetting,
-        test_id: int,
+        test_id,
+        progr_saver=None
     ):
         self.san = san
         self.Os = Os
         self.bestRatio = 0
         self.test_id = test_id
+        self.progr_saver = progr_saver
     
     def test(self, program: SourceProgram) -> bool:
         if not (res := self.san.sanitize(program)):
             print(f" {res} Sani fail")
-            return False     
+            return False
+        
+        if self.progr_saver is not None:
+            self.progr_saver.save_test_substep(self.test_id, program.code, helper.get_ratio(program, self.Os))
 
         if test_function_dict[self.test_id](self, program):
             self.bestRatio = helper.get_ratio(program, self.Os)
