@@ -78,7 +78,7 @@ def test_4(self, program: SourceProgram) -> bool:
     root = ast_parser.get_ast_tree(program.code)
     ratio = helper.get_tree_ratio(program,self.Os,root)
 
-    return ratio > self.bestRatio
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 # Ensure that no unused functions/variables are contained in the final program and count as tree nodes
 def test_5(self, program: SourceProgram) -> bool:
@@ -115,7 +115,7 @@ def test_5(self, program: SourceProgram) -> bool:
             node.parent = None
 
     ratio = helper.get_tree_ratio(program, self.Os, root)
-    return ratio > self.bestRatio
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 # Make global variables and functions (except main) static
 def test_6(self, program: SourceProgram) -> bool:
