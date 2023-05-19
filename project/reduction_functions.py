@@ -9,8 +9,11 @@ import re
 from anytree import Node
 
 from static_globals.instrumenter import annotate_with_static
-from saver import ProgressiveSaver
-import saver
+
+from diopter.compiler import (
+    CompilerExe,
+    OptLevel,
+)
 
 
 
@@ -119,6 +122,46 @@ def test_6(self, program: SourceProgram) -> bool:
     program = annotate_with_static(program)
     return test_4(self, program)
 
+# Make features which we want to disincentivize weight a LOT. In this instance we want for loops to be removed by the reduction function
+def test_7(self, program: SourceProgram) -> bool:
+    disincentivize_weight = 20
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
+    for node in root.descendants:
+            if "ForStmt" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"for-weight-node", parent=root)
+            elif "VarDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"var-decl-node", parent=root)
+            elif "FieldDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"field-decl-node", parent=root)
+            elif "TypeDefDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"type def declaration", parent=root)
+            elif "printf" in node.name:
+                for _ in range(40):
+                    Node(f"printf declaration", parent=root)
+                    
+    ratio = helper.get_tree_ratio(program, self.Os, root)
+    return ratio > self.bestRatio
+
+# Tries to find programs where the ratio is worse using Os compared to O3
+# def test_8(self, program: SourceProgram) -> bool:
+
+#     O3 = CompilationSetting(
+#         compiler=CompilerExe.get_system_gcc(),
+#         opt_level=OptLevel.Os,
+#         flags=("-march=native",),
+#     )
+#     program = annotate_with_static(program)
+#     root = ast_parser.get_ast_tree(program.code)
+
+#     ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+#     ratio_O3 = helper.get_tree_ratio(program, O3, root)
+
+#     return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
 
 test_function_dict = {
     "test_0": test_0,
@@ -126,7 +169,9 @@ test_function_dict = {
     "test_3": test_3,
     "test_4": test_4,
     "test_5": test_5,
-    "test_6":test_6,
+    "test_6": test_6,
+    "test_7": test_7,
+    # # "test_8": test_8
 }
 
 def get_test_functions():

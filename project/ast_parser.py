@@ -93,9 +93,10 @@ def get_ast_tree(code: str)-> Node:
         __parse_tree__(root,0)
 
     # 4. Remove Type def declarations, since they are not a valuable metric
-        for node in root.descendants:
-            if "TypedefDecl" in node.name:
-                node.parent = None
+    # FIXME THIS IS A BUG. IF WE DON?T WANT A FEATURE WE SHOULD ADD IT
+        # for node in root.descendants:
+        #     if "TypedefDecl" in node.name:
+        #         node.parent = None
 
         return root
     

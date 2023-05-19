@@ -81,15 +81,14 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
         else:
             logger.info("Tracing program. This will gratly increase runtime!")
-            rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
-
         try:
+            rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
             assert rprogram
-        except:
+        except Exception as e:
             logger.error(f"Failed reduction on {test_id}")
             continue
 
-        if test_id == "test_6": # We save the generated program with static variables, since this is what we use as a metric in test_6
+        if test_id in ["test_6", "test_7", "test_8"]: # We save the generated program with static variables, since this is what we use as a metric in test_6
             rprogram = annotate_with_static(rprogram)
 
         output_code = helper.clang_formatter(rprogram.code)
