@@ -122,11 +122,19 @@ def test_6(self, program: SourceProgram) -> bool:
     program = annotate_with_static(program)
     return test_4(self, program)
 
-# Make features which we want to disincentivize weight a LOT. In this instance we want for loops to be removed by the reduction function
+# Make features which we want to disincentivize weight a LOT. 
+# In this instance we want as few as possible of the following:
+#   - for loops
+#   - Variable declarations
+#   - Field Declarations
+#   - TypeDef declarations
+#   - Print statements
+# We also want to ensure that the AST has at least a certain amount of nodes
 def test_7(self, program: SourceProgram) -> bool:
     disincentivize_weight = 20
     program = annotate_with_static(program)
     root = ast_parser.get_ast_tree(program.code)
+    tree_size = ast_parser.get_ast_size(root) # It is important to check the tree size BEFORE we start adding nodes
     for node in root.descendants:
             if "ForStmt" in node.name:
                 for _ in range(disincentivize_weight):
@@ -143,9 +151,9 @@ def test_7(self, program: SourceProgram) -> bool:
             elif "printf" in node.name:
                 for _ in range(40):
                     Node(f"printf declaration", parent=root)
-                    
+
     ratio = helper.get_tree_ratio(program, self.Os, root)
-    return ratio > self.bestRatio
+    return ratio > self.bestRatio and tree_size > 30
 
 # Tries to find programs where the ratio is worse using Os compared to O3
 # def test_8(self, program: SourceProgram) -> bool:

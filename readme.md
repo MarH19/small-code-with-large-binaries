@@ -1,5 +1,5 @@
 ### Running the code
-**Before starting any run** ensure that you only enable the test funcitons you want to run. If you decide to use all of them you will have to wait multiple hours. **Results are only saved at the end of each test!**
+**Before starting any run** ensure that you only enable the test functions you want to run. If you decide to use all of them you will have to wait multiple hours. **Results are only saved at the end of each test!**
 
 Make sure to install all required dependencies, as well as running `export CSMITH_H_PATH=/home/csmith/build/include`, adapting the location based on your machine.
 1. Select what test functions to run by editing `reduction_functions.py`. Comment in the tests you want to perform in the `test_function_dict` dictionary.
@@ -8,7 +8,7 @@ Make sure to install all required dependencies, as well as running `export CSMIT
 **Flags**
 You can use the following flags when performing reductions:
 - `python project/inital_reducer.py -f filename.c` This allows you to pass a file as input to the reduction algorithm, instead of generating code with csmith
-- `python project/inital_reducer.py -t` Trace option, saves a snapshots-test#/resport.csv file which contains the ratio reached at each reduction step. It also saves the reduced code every 5 minutes n the same folder.
+- `python project/inital_reducer.py -t` Trace option, saves a snapshots-test#/report.csv file which contains the ratio reached at each reduction step. It also saves the reduced code every 5 minutes n the same folder.
 
 ### Helper functions
 To get the AST for any of the generated .c code  run `python ast_parser -f filepath/filename.c`

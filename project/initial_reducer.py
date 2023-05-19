@@ -103,7 +103,7 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest="filename",
-                        help="FILE from which start reduction. Leave empty for csmith generation", metavar="FILE")
+                        help="FILE from which to start reduction. Leave empty for csmith generation", metavar="FILE")
     parser.add_argument('-t', dest='trace_run', action='store_true', 
                         help='Trace the execution of the program by saving progress of reduction size as well as code snapshots at regular intervals')
     args = parser.parse_args()
