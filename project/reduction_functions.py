@@ -9,8 +9,11 @@ import re
 from anytree import Node
 
 from static_globals.instrumenter import annotate_with_static
-from saver import ProgressiveSaver
-import saver
+
+from diopter.compiler import (
+    CompilerExe,
+    OptLevel,
+)
 
 
 
@@ -75,7 +78,7 @@ def test_4(self, program: SourceProgram) -> bool:
     root = ast_parser.get_ast_tree(program.code)
     ratio = helper.get_tree_ratio(program,self.Os,root)
 
-    return ratio > self.bestRatio
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 # Ensure that no unused functions/variables are contained in the final program and count as tree nodes
 def test_5(self, program: SourceProgram) -> bool:
@@ -112,13 +115,83 @@ def test_5(self, program: SourceProgram) -> bool:
             node.parent = None
 
     ratio = helper.get_tree_ratio(program, self.Os, root)
-    return ratio > self.bestRatio
+    return ratio > self.bestRatio and ast_parser.get_ast_size(root) > 30
 
 # Make global variables and functions (except main) static
 def test_6(self, program: SourceProgram) -> bool:
     program = annotate_with_static(program)
     return test_4(self, program)
 
+# Make features which we want to disincentivize weight a LOT. 
+# In this instance we want as few as possible of the following:
+#   - for loops
+#   - Variable declarations
+#   - Field Declarations
+#   - TypeDef declarations
+#   - Print statements
+# We also want to ensure that the AST has at least a certain amount of nodes
+def test_7(self, program: SourceProgram) -> bool:
+    disincentivize_weight = 20
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
+    tree_size = ast_parser.get_ast_size(root) # It is important to check the tree size BEFORE we start adding nodes
+    for node in root.descendants:
+            if "ForStmt" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"for-weight-node", parent=root)
+            elif "VarDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"var-decl-node", parent=root)
+            elif "FieldDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"field-decl-node", parent=root)
+            elif "TypeDefDecl" in node.name:
+                for _ in range(disincentivize_weight):
+                    Node(f"type def declaration", parent=root)
+            elif "printf" in node.name:
+                for _ in range(40):
+                    Node(f"printf declaration", parent=root)
+
+    # NOTE Performing weighting by adding multiple nodes in NOT the most efficient way to perform this operation.
+    #   It has the advantage of clearly illustrating what the effect of the weighting parameter is, and is thus kept.
+    #   Ideally one would add a get_tree_ratio function, which takes an additional weight parameter.
+
+    ratio = helper.get_tree_ratio(program, self.Os, root)
+    return ratio > self.bestRatio and tree_size > 30
+
+# Possible FUTURE WORK
+# Tries to find programs where the ratio is worse using Os compared to O3
+def test_8(self, program: SourceProgram) -> bool:
+
+    O3 = CompilationSetting(
+        compiler=CompilerExe.get_system_gcc(),
+        opt_level=OptLevel.O3,
+        flags=("-march=native",),
+    )
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
+
+    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+    ratio_O3 = helper.get_tree_ratio(program, O3, root)
+
+    return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
+
+# Possible FUTURE WORK
+# Tries to find in which using the clang compiler might give better ratios than gcc
+def test_9(self, program: SourceProgram) -> bool:
+
+    Oclang = CompilationSetting(
+        compiler=CompilerExe.get_system_clang(),
+        opt_level=OptLevel.Os,
+        flags=("-march=native",),
+    )
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
+
+    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+    ratio_Oclang = helper.get_tree_ratio(program, Oclang, root)
+
+    return ratio_Os < ratio_Oclang and ratio_Os > self.BestRatio
 
 test_function_dict = {
     "test_0": test_0,
@@ -126,7 +199,10 @@ test_function_dict = {
     "test_3": test_3,
     "test_4": test_4,
     "test_5": test_5,
-    "test_6":test_6,
+    "test_6": test_6,
+    "test_7": test_7,
+    # # "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
+    # # "test_9": test_9  # FUTURE WORK. try these at your own risk
 }
 
 def get_test_functions():
