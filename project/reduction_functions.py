@@ -152,24 +152,46 @@ def test_7(self, program: SourceProgram) -> bool:
                 for _ in range(40):
                     Node(f"printf declaration", parent=root)
 
+    # NOTE Performing weighting by adding multiple nodes in NOT the most efficient way to perform this operation.
+    #   It has the advantage of clearly illustrating what the effect of the weighting parameter is, and is thus kept.
+    #   Ideally one would add a get_tree_ratio function, which takes an additional weight parameter.
+
     ratio = helper.get_tree_ratio(program, self.Os, root)
     return ratio > self.bestRatio and tree_size > 30
 
+# Possible FUTURE WORK
 # Tries to find programs where the ratio is worse using Os compared to O3
-# def test_8(self, program: SourceProgram) -> bool:
+def test_8(self, program: SourceProgram) -> bool:
 
-#     O3 = CompilationSetting(
-#         compiler=CompilerExe.get_system_gcc(),
-#         opt_level=OptLevel.Os,
-#         flags=("-march=native",),
-#     )
-#     program = annotate_with_static(program)
-#     root = ast_parser.get_ast_tree(program.code)
+    O3 = CompilationSetting(
+        compiler=CompilerExe.get_system_gcc(),
+        opt_level=OptLevel.O3,
+        flags=("-march=native",),
+    )
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
 
-#     ratio_Os = helper.get_tree_ratio(program, self.Os, root)
-#     ratio_O3 = helper.get_tree_ratio(program, O3, root)
+    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+    ratio_O3 = helper.get_tree_ratio(program, O3, root)
 
-#     return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
+    return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
+
+# Possible FUTURE WORK
+# Tries to find in which using the clang compiler might give better ratios than gcc
+def test_9(self, program: SourceProgram) -> bool:
+
+    Oclang = CompilationSetting(
+        compiler=CompilerExe.get_system_clang(),
+        opt_level=OptLevel.Os,
+        flags=("-march=native",),
+    )
+    program = annotate_with_static(program)
+    root = ast_parser.get_ast_tree(program.code)
+
+    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+    ratio_Oclang = helper.get_tree_ratio(program, Oclang, root)
+
+    return ratio_Os < ratio_Oclang and ratio_Os > self.BestRatio
 
 test_function_dict = {
     "test_0": test_0,
@@ -179,7 +201,8 @@ test_function_dict = {
     "test_5": test_5,
     "test_6": test_6,
     "test_7": test_7,
-    # # "test_8": test_8
+    # # "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
+    # # "test_9": test_9  # FUTURE WORK. try these at your own risk
 }
 
 def get_test_functions():
