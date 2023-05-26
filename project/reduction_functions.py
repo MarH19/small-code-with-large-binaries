@@ -169,15 +169,20 @@ def test_8(self, program: SourceProgram) -> bool:
         flags=("-march=native",),
     )
     program = annotate_with_static(program)
-    root = ast_parser.get_ast_tree(program.code)
 
-    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
-    ratio_O3 = helper.get_tree_ratio(program, O3, root)
+    # root = ast_parser.get_ast_tree(program.code)
 
-    return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
+    # ratio_Os = helper.get_tree_ratio(program, self.Os, root)
+    # ratio_O3 = helper.get_tree_ratio(program, O3, root)
+
+    ratio_Os = helper.get_ratio(program, self.Os)
+    ratio_O3 = helper.get_ratio(program, O3)
+
+    return ratio_Os > ratio_O3
+    # return ratio_Os < ratio_O3 and ratio_Os > self.BestRatio
 
 # Possible FUTURE WORK
-# Tries to find in which using the clang compiler might give better ratios than gcc
+# Tries to find in which using the clang compiler might give worse ratios than gcc
 def test_9(self, program: SourceProgram) -> bool:
 
     Oclang = CompilationSetting(
@@ -186,12 +191,10 @@ def test_9(self, program: SourceProgram) -> bool:
         flags=("-march=native",),
     )
     program = annotate_with_static(program)
-    root = ast_parser.get_ast_tree(program.code)
 
-    ratio_Os = helper.get_tree_ratio(program, self.Os, root)
-    ratio_Oclang = helper.get_tree_ratio(program, Oclang, root)
-
-    return ratio_Os < ratio_Oclang and ratio_Os > self.BestRatio
+    ratio_Os = helper.get_ratio(program, self.Os)
+    ratio_Oclang = helper.get_ratio(program, Oclang)
+    return ratio_Os < ratio_Oclang
 
 test_function_dict = {
     "test_0": test_0,
@@ -201,8 +204,8 @@ test_function_dict = {
     "test_5": test_5,
     "test_6": test_6,
     "test_7": test_7,
-    # # "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
-    # # "test_9": test_9  # FUTURE WORK. try these at your own risk
+    "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
+    "test_9": test_9  # FUTURE WORK. try these at your own risk, they won't work most of the time. bite some times it does work
 }
 
 def get_test_functions():

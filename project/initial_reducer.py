@@ -80,7 +80,7 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
         if not trace_run:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
         else:
-            logger.info("Tracing program. This will gratly increase runtime!")
+            logger.info("Tracing program. This will greatly increase runtime!")
         try:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
             assert rprogram
@@ -119,8 +119,18 @@ if __name__ == '__main__':
 
     else:
         logger.info("Generating code with CSMITH")
-        options_pool=helper.generate_csmith_flags()
-        p = generate_csmith(sanitizer, options_pool)
+        # In most cases csmith manages to generate code in the first try. This error handling was added to retry with new options in case of a failure
+        retry_count = 0
+        max_retries = 10 
+        while retry_count < max_retries: 
+            try:
+                options_pool=helper.generate_csmith_flags()
+                p = generate_csmith(sanitizer, options_pool)
+                break
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                retry_count += 1
+                print(f"Retrying... ({retry_count}/{max_retries})")
 
     progr_saver = ProgressiveSaver(p.code, helper.get_ratio(p, Os), options_pool)
 

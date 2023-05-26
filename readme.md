@@ -1,7 +1,8 @@
 ### Running the code
 **Before starting any run** ensure that you only enable the test functions you want to run. If you decide to use all of them you will have to wait multiple hours. **Results are only saved at the end of each test!**
 
-Make sure to install all required dependencies, as well as running `export CSMITH_H_PATH=/home/csmith/build/include`, adapting the location based on your machine.
+Make sure to install all required dependencies, as well as running `export CSMITH_H_PATH=/home/csmith/build/include`, adapting the location based on your machine. Ensure that an `outputs/`folder is present in the directory from which you are launching the reduction program.
+
 1. Select what test functions to run by editing `reduction_functions.py`. Comment in the tests you want to perform in the `test_function_dict` dictionary.
 2. Start the reduction process by running `python project/inital_reducer.py`
 
