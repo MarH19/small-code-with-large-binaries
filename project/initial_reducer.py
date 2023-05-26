@@ -80,7 +80,7 @@ def perform_reduction(p: SourceProgram, progr_saver: ProgressiveSaver, trace_run
         if not trace_run:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id))
         else:
-            logger.info("Tracing program. This will gratly increase runtime!")
+            logger.info("Tracing program. This will increase runtime significantly!")
         try:
             rprogram = Reducer().reduce(p, reduction_functions.ReduceObjectSize(sanitizer, Os, test_id, progr_saver))
             assert rprogram
