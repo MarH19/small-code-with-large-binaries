@@ -2,6 +2,7 @@ import logging
 
 
 # Source SO: https://stackoverflow.com/a/56944256
+# This script is used to have nicely colored logging messages =)
 
 class FormatLog(logging.Formatter):
 

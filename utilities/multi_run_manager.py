@@ -4,7 +4,7 @@ This file is used to start multiple runs on a remote machine and notify in case 
 import subprocess
 
 import http.client, urllib
-token = ""
+token = "" # My precious tokens will not be shared =P . Go to the forest and collect your own tokens, the best ones grow just after a heavy rain (as an alternative tokens can also be obtained from pushover.net)
 user = ""
 
 script_path = 'project/initial_reducer.py'

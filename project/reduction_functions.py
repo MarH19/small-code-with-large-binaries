@@ -15,30 +15,9 @@ from diopter.compiler import (
     OptLevel,
 )
 
-
-
-# def ratio_filter(program: SourceProgram, Osettings: CompilationSetting, best_ratio: float) -> bool:
-#     ratio = helper.get_ratio(program,Osettings)
-
-#     #0. remove comments from code
-#     code = helper.comment_remover(program.code)
-
-#     print("---")
-#     ast_code_size = ast_parser.get_code_size(code)
-#     print(ast_code_size)
-#     print("---")
-
-#     return ratio>best_ratio and ast_code_size >30 
-
-
-
-
 #=======================================================
 # Test modules, which get passed to ReduceObjectSize, determine interestingness of funciton
 #=======================================================
-
-# with minimum amount of lines without ; // a lot of useless function declarations
-# with minimum amount of lines and AST // contains unused variables
 
 # Only ensures that the code gets continuosly reduced, without putting constraints on the minimum amount of lines/code
 def test_0(self, program: SourceProgram) -> bool:
@@ -57,7 +36,7 @@ def test_1(self, program: SourceProgram) -> bool:
 
 # Instead of counting the lines use an AST (abstract syntax tree) and count the nodes contained withn
 def test_2(self, program: SourceProgram) -> bool:
-    # Legacy test do not remove
+    # Legacy test do not remove to keep naming consistent
     ...
 
 # Start processing AST by removing blank lines
@@ -196,6 +175,10 @@ def test_9(self, program: SourceProgram) -> bool:
     ratio_Oclang = helper.get_ratio(program, Oclang)
     return ratio_Os < ratio_Oclang
 
+#=======================================================
+# List of test functions which get tried on a run of initial-reducer.py
+# Only comment in the tests you want to perform!
+#=======================================================
 test_function_dict = {
     "test_0": test_0,
     "test_1": test_1,
@@ -204,13 +187,17 @@ test_function_dict = {
     "test_5": test_5,
     "test_6": test_6,
     "test_7": test_7,
-    "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
-    "test_9": test_9  # FUTURE WORK. try these at your own risk, they won't work most of the time. bite some times it does work
+    # # "test_8": test_8, # FUTURE WORK. These tests have been left in the code since they are almost functional, but due to time constraints could not be properly checked
+    # # "test_9": test_9  # FUTURE WORK. try these at your own risk, they won't work most of the time. but some times they do
 }
 
 def get_test_functions():
     return test_function_dict.keys()
 
+#=======================================================
+# ReduceObject passed to C-Reduce, it reads the name of the test function it receives and calls the corresponding test funciton as defined
+# in test_function_dict
+#=======================================================
 
 class ReduceObjectSize(ReductionCallback):
     def __init__(

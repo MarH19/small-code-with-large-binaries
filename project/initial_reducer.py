@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 
 """
-This diopter program is used to generate and reduce a csmith
-that results in a disproportionate ratio between binary and source code
+This diopter program is used to generate and reduce an input C program such that the ratio between C and assembly code becomes disproportionate
+This is the MAIN function from which we start the reduction process. The actual reduction functions are located in reduction_functions.py
+Remember to enable/disable the desired reduction functions by editing the test_function_dict dictionary in reduciton_functions.py
 """
 
 from argparse import ArgumentParser
-import tempfile
 import helper
-import ast_parser
 import reduction_functions
 from saver import ProgressiveSaver
-import saver
-import logging
 import os
 
 from diopter.compiler import (

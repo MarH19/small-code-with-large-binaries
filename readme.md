@@ -12,7 +12,9 @@ You can use the following flags when performing reductions:
 - `python project/inital_reducer.py -t` Trace option, saves a snapshots-test#/report.csv file which contains the ratio reached at each reduction step. It also saves the reduced code every 5 minutes n the same folder.
 
 ### Helper functions
-To get the AST for any of the generated .c code  run `python ast_parser -f filepath/filename.c`
+* To get the AST for any of the generated .c code  run `python ast_parser -f filepath/filename.c`
+* To get a list of possibly interesting functions run `python identify_interesting.py` and adjust the path to the output folder
+* `multi_run_manager.py` might be useful if you want to run initial_reducer.py on a remote server and want to receive notifications for its progress
 
 
 ### Setting up docker container

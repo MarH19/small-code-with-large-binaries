@@ -13,6 +13,7 @@ from diopter.compiler import (
     Language,
     ObjectCompilationOutput
 )
+from static_globals.instrumenter import annotate_with_static
 
 O0 = CompilationSetting(
         compiler=CompilerExe.get_system_gcc(),
@@ -43,6 +44,7 @@ def get_binary_length(source_code:str, compilation_setting: CompilationSetting):
             system_include_paths=(os.environ['CSMITH_H_PATH']),
             flags=(),
         )
+    program = annotate_with_static(program)
     binaryLength = compilation_setting.compile_program(program, ObjectCompilationOutput(None)).output.text_size()
     return binaryLength
 
@@ -59,7 +61,7 @@ for root, dirs, files in os.walk("outputs"):
                     
                     # if the difference between clang and gcc > 20% of the Os binary size we have a likely failed optimization
                     Os_difference = get_binary_length(source_code, Os) - get_binary_length(source_code, Os_clang)
-                    if abs(Os_difference > get_binary_length(source_code, Os)*0.2):
+                    if abs(Os_difference) > get_binary_length(source_code, Os)*0.2:
                         if Os_difference > 0:
                             # In our case we only encounter this situation, since the reduciton process uses GCC as a metric to optimize against
                             print(f"{os.path.join(root, file)} |- GCC is worse than CLANG") 
