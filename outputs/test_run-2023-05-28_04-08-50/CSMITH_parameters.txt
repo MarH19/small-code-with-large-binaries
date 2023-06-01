@@ -1,0 +1,7 @@
+embedded-assigns
+jumps
+muls
+packed-struct
+paranoid
+arg-structs
+dangling-global-pointers

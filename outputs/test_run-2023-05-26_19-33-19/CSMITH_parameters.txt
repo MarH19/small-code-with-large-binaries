@@ -1,0 +1,12 @@
+checksum
+compound-assignment
+consts
+divs
+longlong
+packed-struct
+pointers
+structs
+inline-function
+return-structs
+arg-structs
+dangling-global-pointers

@@ -1,0 +1,3 @@
+compound-assignment
+arg-structs
+dangling-global-pointers

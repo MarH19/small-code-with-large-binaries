@@ -1,0 +1,2 @@
+                                                                                                                                        unsigned int platform_main_end_crc;
+                                                                          int main () {            int i;                        i = 0;                        for (i;        i < 4;        i++)                 {            {                    printf ("checksum = %X\n", platform_main_end_crc);                   }                        ;            }        }

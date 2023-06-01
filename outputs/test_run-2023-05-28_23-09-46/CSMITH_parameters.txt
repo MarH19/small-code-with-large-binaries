@@ -1,0 +1,10 @@
+checksum
+comma-operators
+compound-assignment
+consts
+longlong
+math64
+muls
+paranoid
+structs
+return-structs

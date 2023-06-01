@@ -1,0 +1,2 @@
+return-structs
+dangling-global-pointers

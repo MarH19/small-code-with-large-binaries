@@ -1,0 +1,12 @@
+comma-operators
+compound-assignment
+divs
+jumps
+longlong
+force-non-uniform-arrays
+math64
+paranoid
+structs
+inline-function
+arg-structs
+dangling-global-pointers

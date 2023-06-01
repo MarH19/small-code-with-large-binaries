@@ -1,0 +1,9 @@
+arrays
+bitfields
+comma-operators
+embedded-assigns
+paranoid
+structs
+inline-function
+arg-structs
+dangling-global-pointers

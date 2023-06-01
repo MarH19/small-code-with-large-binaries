@@ -1,0 +1,12 @@
+arrays
+bitfields
+checksum
+comma-operators
+compound-assignment
+divs
+embedded-assigns
+math64
+paranoid
+structs
+inline-function
+return-structs

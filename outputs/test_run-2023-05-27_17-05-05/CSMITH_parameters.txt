@@ -1,0 +1,12 @@
+arrays
+bitfields
+comma-operators
+compound-assignment
+consts
+divs
+embedded-assigns
+longlong
+muls
+pointers
+arg-structs
+dangling-global-pointers

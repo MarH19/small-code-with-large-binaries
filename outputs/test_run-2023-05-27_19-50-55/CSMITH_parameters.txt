@@ -1,0 +1,11 @@
+bitfields
+comma-operators
+compound-assignment
+divs
+jumps
+math64
+paranoid
+pointers
+inline-function
+return-structs
+arg-structs

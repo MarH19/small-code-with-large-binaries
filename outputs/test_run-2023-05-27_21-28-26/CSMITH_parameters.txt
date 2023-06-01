@@ -1,0 +1,14 @@
+arrays
+bitfields
+checksum
+comma-operators
+divs
+embedded-assigns
+jumps
+longlong
+force-non-uniform-arrays
+paranoid
+pointers
+structs
+inline-function
+dangling-global-pointers

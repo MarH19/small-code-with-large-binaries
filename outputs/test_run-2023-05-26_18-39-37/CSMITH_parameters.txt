@@ -1,0 +1,11 @@
+checksum
+comma-operators
+compound-assignment
+consts
+jumps
+longlong
+force-non-uniform-arrays
+paranoid
+return-structs
+arg-structs
+dangling-global-pointers

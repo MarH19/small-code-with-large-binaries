@@ -1,0 +1,10 @@
+bitfields
+checksum
+comma-operators
+compound-assignment
+force-non-uniform-arrays
+packed-struct
+paranoid
+inline-function
+return-structs
+dangling-global-pointers

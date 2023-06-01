@@ -1,0 +1,9 @@
+bitfields
+checksum
+comma-operators
+divs
+embedded-assigns
+jumps
+longlong
+muls
+return-structs

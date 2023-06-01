@@ -1,0 +1,9 @@
+bitfields
+checksum
+compound-assignment
+consts
+jumps
+longlong
+muls
+structs
+return-structs
