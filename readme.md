@@ -27,3 +27,6 @@ If you run the example from Diopter (`git clone https://github.com/DeadCodeProdu
 Line 64: `p = CSmithGenerator(sanitizer,include_path="/home/csmith/build/include").generate_program()`
 
 Ensure that when running on a local machine the environment variable `CSMITH_H_PATH=/home/csmith/build/include` is set to the location of the .h file for csmith. (On chris's machine it is at /home/chris/.bin/csmith/build/include, the docker file already sets it up)
+
+### Sample artifacts
+A sample of obtained outputs as well as project status updates and repports can be foun in the [artifacts branch](https://gitlab.ethz.ch/tibaldoc/ast_largebinaries_smallcode/-/tree/artifacts?ref_type=heads)

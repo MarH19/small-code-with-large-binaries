@@ -1,5 +1,6 @@
 VIRTUAL
 project/__pycache__
 *platform.info
-
+outputs.tar.gz
 *output*.c
+*test*
