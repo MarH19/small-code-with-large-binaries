@@ -1,3 +1,6 @@
+### INFO
+This is the repository of my project from the Automated Software Testing course offered at ETH Zurich. The main branch contains all source code and in the artifacts branch all written submissions can be found.
+
 ### Running the code
 **Before starting any run** ensure that you only enable the test functions you want to run. If you decide to use all of them you will have to wait multiple hours. **Results are only saved at the end of each test!**
 
